@@ -7,8 +7,10 @@
 
 HOST=""
 PORT=""
+UPIF=""
+DOWNIF=""
 
-while getopts ":s:p:h?" opt; do
+while getopts ":u:d:s:p:h?" opt; do
   case $opt in
     :|\?|h)
       echo "Usage: ${0} -s SERVER -p PORT"
@@ -19,6 +21,12 @@ while getopts ":s:p:h?" opt; do
     p)
       PORT=${OPTARG}
       ;;
+    u)
+      UPIF=${OPTARG}
+      ;;
+    d)
+      DOWNIF=${OPTARG}
+      ;;
   esac
 done
 
@@ -27,4 +35,9 @@ if [[ -z "${HOST}" ]] || [[ -z "${PORT} ]]; then
   exit 1
 fi
 
-#Do stuff, know things
+# Get address
+IP=$(host ${HOST} | awk '/has address/ { print $4 ; exit }')
+#TODO: Don't assume happy path
+
+# Open it up
+iptables -A FORWARD -i ${DOWNIF} -o ${UPIF} -d ${IP} --dport ${PORT} -j ACCEPT
