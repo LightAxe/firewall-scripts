@@ -24,7 +24,13 @@ if [[ -z "${UPIF}" ]] || [[ -z "${DOWNIF} ]]; then
 fi
 
 # Start with basic iptables rules
+iptables -F
+iptables -t nat -A POSTROUTING -o ${UPIF} -j MASQUERADE
+iptables -P FORWARD DROP
+iptables -A FORWARD -i ${UPIF} -o ${DOWNIF} -m state --state RELATED,ESTABLISHED -j ACCEPT
 
 # Transparent DNS proxy
+iptables -t nat -A PREROUTING -i ${DOWNIF} -p tcp,udp -j REDIRECT --to-port 53
 
 # Enable forwarding
+echo 1 > /proc/sys/net/ipv4/ip_forward
